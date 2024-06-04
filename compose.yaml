@@ -1,4 +1,13 @@
 services:
+  express:
+    build:
+      context: ./express
+      dockerfile: Dockerfile
+    ports:
+      - 127.0.0.1:3001:3001
+
+    container_name: express
+
   postgres:
     image: postgres:14-alpine
     ports:
@@ -21,6 +30,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://postgres:qwerty@postgres:5432/mydb?schema=public
+      EXPRESS_URL: http://express:3001
+      
     ports:
       - 3000:3000
     container_name: subdomains

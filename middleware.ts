@@ -45,5 +45,9 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
+  if (subdomain == "express") {
+    return NextResponse.rewrite(new URL(`${process.env.EXPRESS_URL}${path}`, req.url));
+  }
+
   return NextResponse.rewrite(new URL(`/${subdomain}${path}`, req.url));
 }
