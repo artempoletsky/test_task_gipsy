@@ -1,0 +1,10 @@
+import { NextRequest, NextResponse } from "next/server";
+
+type RouteParams = {
+  slug?: string[];
+  subdomain: string;
+}
+
+export const GET = function (req: NextRequest, params: RouteParams) {
+  return NextResponse.json(params);
+}
