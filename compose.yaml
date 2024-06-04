@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - database:/var/lib/postgresql/data
+
+    container_name: postgres
+
+    environment:
+      POSTGRES_PASSWORD: qwerty
+      POSTGRES_USER: postgres
+      POSTGRES_DB: mydb
+
+  subdomains-app:
+    build:
+      context: .
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:qwerty@postgres:5432/mydb?schema=public
+    ports:
+      - 3000:3000
+    container_name: subdomains
+
+volumes:
+  database:
