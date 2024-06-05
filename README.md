@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Тестовое задание Gipsy Land
 
-## Getting Started
+## Требования:
 
-First, run the development server:
+Приложение должно поддерживать раздачу HTML страниц на несколько доменов;
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Каждая страница должна быть доступна по уникальному URL, соответствующему домену;
+
+Контент страниц должен храниться централизованно.
+
+Рекомендуемый технологический стек:
+
+- Node.js
+- Express
+- Next.js
+
+
+## Обзор файлов проекта
+
+`./middleware.ts` - осуществляет маршрутизацию. Перенаправляет запросы от пользователя таким образом:
+- без поддомена -> /home/page.tsx
+- поддомен `express` -> перенаправляет запрос на экспресс сервер по адресу в `.env` EXPRESS_URL
+- другие поддомены -> /app/[subdomain]/[[...slug]]/page.tsx
+
+`./prisma/shema.prisma` - схема базы данных. Содержит 1 таблицу Article. Чтобы создать новый поддомен надо создать соотвествующую статью в БД. 
+
+Папка `./express/`  содержит в себе простой express сервер, который выдает только 1 страницу. Можно считать это отдельным проектом. 
+
+`./app/[subdomain]/[[...slug]]/schemas.ts` - содержит в себе zod схему getArticle, в дальнейшем мы можем использовать её для создания и валидации API.
+
+`./app/[subdomain]/[[...slug]]/methods.ts` - содержит метод getArticle который возвращает статью из БД.
+
+
+## Запуск с помощью Docker 
+
+Docker engine должен быть запущен
+```sh 
+docker compose -f "compose.yaml" up -d --build 
 ```
+Откройте `http://localhost:3000` чтобы убедиться что работает главная страница /app/home/
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Откройте `http://express.localhost:3000` чтобы убедитья что работает express сервер и маршрутизация. 
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Поключитесь к БД и создайте новую статью по адресу `http://test.localhost:3000/`
+```sql
+INSERT INTO "Article"("content","subdomain","title","slug") VALUES('Hello world','test','Hello world','/');
+```
+Поле `slug` это адрес страницы после домена.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Обзор Docker архитектуры
 
-## Learn More
+В докере 3 контейнера:
+- next  - next.js сервер
+- express - express сервер
+- postgres - база данных
 
-To learn more about Next.js, take a look at the following resources:
+`middleware.ts` обращается к express контейнеру по адресу `http://express:3001`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Prisma обращается к БД по адресу `postgres:5432`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+У `next` порт 3000 открыт наружу, у остальных контейнеров порты открыты только для хоста в целях безопасности. 
 
-## Deploy on Vercel
+Подключиться к БД для редактирования статей можно по адресу `postgresql://postgres:qwerty@localhost:5432/mydb?schema=public` с помощью DBeaver или любым другим способом.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Пароли можно спрятать в docker secrets для простоты я его делать не стал.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Запуск без Docker
+
+Создайте .env файл по примеру .env.example
+
+На вашей машине должен быть запущен postgress сервер и его credentials лежать в .env
+
+Запуск next сервера
+```sh
+npm i
+npm run dev
+```
+Запуск express сервера
+```sh
+cd express
+npm i
+npx ts-node server.ts
+```

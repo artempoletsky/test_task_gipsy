@@ -22,7 +22,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_DB: mydb
 
-  subdomains-app:
+  next:
     build:
       context: .
     depends_on:
@@ -31,10 +31,10 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://postgres:qwerty@postgres:5432/mydb?schema=public
       EXPRESS_URL: http://express:3001
-      
+
     ports:
       - 3000:3000
-    container_name: subdomains
+    container_name: next
 
 volumes:
   database:
